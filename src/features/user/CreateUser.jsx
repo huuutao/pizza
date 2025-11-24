@@ -19,7 +19,7 @@ function CreateUser() {
   return (
     <form onSubmit={handleSubmit}>
       <p className='mb-4 text-sm text-stone-600 md:text-base'>
-        👋 Welcome! Please start by telling us your name:
+        👋 请输入你的名字:
       </p>
 
       <input
@@ -31,7 +31,7 @@ function CreateUser() {
       />
 
       <div>
-        <Button>Start ordering</Button>
+        <Button>Start</Button>
       </div>
     </form>
   );

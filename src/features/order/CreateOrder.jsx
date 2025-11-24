@@ -1,52 +1,38 @@
 import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Form, redirect, useNavigation, useActionData } from 'react-router';
 
-import { createOrder } from '@/servers/apiRestaurant.js';
 import Button from '@features/ui/Button';
 
-import { useSelector, useDispatch } from 'react-redux';
+import { createOrder } from '@/servers/apiRestaurant.js';
 import fetchAddress from '@/servers/userSlice';
-// https://uibakery.io/regex-library/phone-number
+
+import { getTotalPrice } from '@/stores/cartReducer';
+import { formatCurrency } from '@/utils/helpers';
+
 const isValidPhone = (str) =>
   /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/.test(
     str,
   );
 
-const fakeCart = [
-  {
-    pizzaId: 12,
-    name: 'Mediterranean',
-    quantity: 2,
-    unitPrice: 16,
-    totalPrice: 32,
-  },
-  {
-    pizzaId: 6,
-    name: 'Vegetale',
-    quantity: 1,
-    unitPrice: 13,
-    totalPrice: 13,
-  },
-  {
-    pizzaId: 11,
-    name: 'Spinach and Mushroom',
-    quantity: 1,
-    unitPrice: 15,
-    totalPrice: 15,
-  },
-];
-
 function CreateOrder() {
-  // const [withPriority, setWithPriority] = useState(false);
-  const cart = fakeCart;
+  const dispatch = useDispatch();
   const navigation = useNavigation();
-  const isSubbmitting = navigation.state === 'submitting';
   const actionData = useActionData();
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [address, setAddress] = useState('');
-  const dispatch = useDispatch();
+  const [withPriority, setWithPriority] = useState(false);
+
+  const isSubbmitting = navigation.state === 'submitting';
   const name = useSelector((state) => state.user.name);
+  const cart = useSelector((state) => state.cart);
+  const totalPrice = useSelector(getTotalPrice);
+  const totalwithPriority = totalPrice * 1.02;
+  const total = formatCurrency(withPriority ? totalwithPriority : totalPrice);
+
+  console.log(withPriority);
+
   function handleChange(e) {
     setError('');
     setInput(e.target.value);
@@ -100,7 +86,7 @@ function CreateOrder() {
           </div>
         </div>
 
-        <div className='input_container'>
+        <div className='input_container relative'>
           <label htmlFor='address'>Address</label>
           <div className='flex-1 sm:max-w-6/12'>
             <input
@@ -112,6 +98,8 @@ function CreateOrder() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
+          </div>
+          <div className='absolute top-0.5 right-3'>
             <Button onClick={handleAddress}>定位</Button>
           </div>
         </div>
@@ -121,16 +109,19 @@ function CreateOrder() {
             name='priority'
             id='priority'
             className='-amber-300 h-5 w-5 accent-yellow-400'
-            // value={withPriority}
-            // onChange={(e) => setWithPriority(e.target.checked)}
+            value={withPriority}
+            onChange={(e) => setWithPriority(e.target.checked)}
           />
-          <label htmlFor='priority'>Want to yo give your order priority?</label>
+          <label htmlFor='priority'>想优先配送吗？</label>
         </div>
 
-        <div className='flex justify-center py-5 sm:justify-end'>
+        <div className='flex items-center justify-center gap-6 py-5 sm:justify-end'>
           <input type='hidden' name='cart' value={JSON.stringify(cart)} />
+          <div>
+            <span>{total}</span>
+          </div>
           <Button disabled={isSubbmitting}>
-            {isSubbmitting ? 'Submitting...' : 'Order now'}
+            {isSubbmitting ? '提交中...' : '订餐'}
           </Button>
         </div>
       </Form>
@@ -152,7 +143,6 @@ export const action = async ({ request }) => {
   const order = {
     ...data,
     cart: JSON.parse(data.cart),
-    priority: data.priority === 'on',
   };
 
   const newOrder = await createOrder(order);

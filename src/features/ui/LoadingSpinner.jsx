@@ -1,9 +1,6 @@
 export default function LoadingSpinner() {
   return (
-    <div
-      className='absolute bg-slate-200/20 inset-0 backdrop-blur-xs flex
-        items-center justify-center'
-    >
+    <div className='absolute inset-0 z-40 flex items-center justify-center bg-slate-200/20 backdrop-blur-xs'>
       <div className='loader'></div>
     </div>
   );
