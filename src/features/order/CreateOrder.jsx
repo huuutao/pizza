@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Form, redirect, useNavigation, useActionData } from 'react-router';
-
+import store from '@/stores/store';
 import Button from '@features/ui/Button';
 
 import { createOrder } from '@/servers/apiRestaurant.js';
 import fetchAddress from '@/servers/userSlice';
 
-import { getTotalPrice } from '@/stores/cartReducer';
+import { getTotalPrice, clearCart } from '@/stores/cartReducer';
 import { formatCurrency } from '@/utils/helpers';
 
 const isValidPhone = (str) =>
@@ -146,6 +146,8 @@ export const action = async ({ request }) => {
   };
 
   const newOrder = await createOrder(order);
+
+  store.dispatch(clearCart());
 
   return redirect(`/order/${newOrder.id}`);
 };

@@ -2,7 +2,10 @@ import { createBrowserRouter } from 'react-router';
 import Home from '@features/ui/Home';
 import Menu, { loader as menuLoader } from '@features/menu/Menu';
 import Cart from '@features/cart/Cart';
-import Order, { loader as orderLoader } from '@features/order/Order';
+import Order, {
+  loader as orderLoader,
+  action as orderAction,
+} from '@features/order/Order';
 import CreateUser from '@features/user/CreateUser';
 import CreateOrder, {
   action as createOrderAction,
@@ -38,6 +41,7 @@ const router = createBrowserRouter([
             Component: Order,
             loader: orderLoader,
             ErrorBoundary: Error,
+            action: orderAction,
           },
           {
             index: true,

@@ -1,10 +1,11 @@
 // Test ID: IIDSAT
-import { useLoaderData } from 'react-router';
+import { useLoaderData, useFetcher } from 'react-router';
 import SearchOrder from './SearchOrder';
 import OrderItemtem from './OrderItem.jsx';
 import { calcMinutesLeft, formatCurrency, formatDate } from '@/utils/helpers';
-import { getOrder } from '@/servers/apiRestaurant';
-
+import { getOrder, updateOrder } from '@/servers/apiRestaurant';
+import { useEffect } from 'react';
+import Button from '@features/ui/Button';
 function Order() {
   const {
     id,
@@ -15,6 +16,15 @@ function Order() {
     estimatedDelivery,
     cart,
   } = useLoaderData();
+  const fetcher = useFetcher();
+
+  useEffect(
+    function () {
+      // 加载menu页面loader
+      if (fetcher.state === 'idle' && !fetcher.data) fetcher.load('/menu');
+    },
+    [fetcher],
+  );
 
   const deliveryIn = calcMinutesLeft(estimatedDelivery);
 
@@ -45,7 +55,15 @@ function Order() {
       </div>
       <ul className='divide-y divide-zinc-400'>
         {cart.map((item) => (
-          <OrderItemtem item={item} />
+          <OrderItemtem
+            item={item}
+            key={item.pizzaId}
+            ingredients={
+              fetcher.data?.find((menuItem) => menuItem.id === item.pizzaId)
+                ?.ingredients
+            }
+            isLoadingIngredients={fetcher.state === 'loading'}
+          />
         ))}
       </ul>
       <div className='text-md sm:justify-left bg-stone-300 px-2 py-6 sm:flex sm:flex-col sm:justify-start'>
@@ -55,7 +73,18 @@ function Order() {
           To pay on delivery: {formatCurrency(orderPrice + priorityPrice)}
         </p>
       </div>
+      <UpdateOrderStatus id={id} priority={priority}></UpdateOrderStatus>
     </div>
+  );
+}
+
+function UpdateOrderStatus({ id, priority }) {
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form method='PATCH' className='text-right'>
+      {!priority && <Button>优先配送</Button>}
+    </fetcher.Form>
   );
 }
 
@@ -64,6 +93,16 @@ export default Order;
 export async function loader({ params }) {
   const { orderId: id } = params;
   const order = await getOrder(id);
-  console.log(order);
+
   return order;
+}
+
+export async function action({ params }) {
+  const { orderId: id } = params;
+  const order = {
+    priority: true,
+  };
+  await updateOrder(id, order);
+
+  // return null;
 }
